@@ -25,4 +25,4 @@ To use this project, you need to install GNSS-SDR, USRP driver, and GPS receiver
 - GPS receiver: https://www.u-blox.com/en/products/gps-modules/u-blox-gps-modules
 - Antenna array: https://www.antennaarray.com/
 
-![test](/imgs/Snipaste_2024-12-27_10-43-32.png)
+![test](/figs/Snipaste_2024-12-27_10-43-32.png)
