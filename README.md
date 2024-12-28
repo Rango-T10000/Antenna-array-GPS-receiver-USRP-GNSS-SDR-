@@ -145,6 +145,19 @@ The sample rate is 4MSa/s for each RF source(I have 4 RF source, i.e. 4 ants), t
 ```
 So, I use the 10Gbps Ethernet controller to solve this problem. Most the general laptops have only 1Gbps Ethernet controller, which is not enough for this application. So I recommand you can buy a USB4 to 10Gbps Ethernet controller. And make sure your laptop has a thunderbolt port!
 
+### 5. Decoded files
+Generally, gnss-sdr will output some decoded files, for example in above displayed figure:
+
+| **File Name**                  | **Content Description**                                | **Note**                              |
+|--------------------------------|-------------------------------------------------------|--------------------------------------------|
+| `gps_ephemeris.xml`;<br>`GSDR362k49.24N`             | GPS satellite ephemeris data (orbital parameters, clock corrections). | `.xml` and `.xxn` are the same data with different format. There are all satellite ephemeris data decoded from the received signal. They just contain GPS satellite ephemeris data within the receiving period, which is different from the broadcast ephemeris file that you can download from https://cddis.nasa.gov/archive/gnss/data/daily/2024/brdc/|
+| `GSDR362k49.240`         | RINEX file (v3.02) with observation data, navigation messages, receiver metadata. | Post-processing, accurate positioning, interoperability. This RINEX file constains carrier phase, pseudo-range, Doppler frequency, and RSS data. you can check detailed information by: https://www.spatial.nsw.gov.au/__data/assets/pdf_file/0018/232452/2023_Janssen_Coordinates1911_understanding_the_RINEX_format.pdf or https://igs.org/formats-and-standards/|
+| `nmea_pvt.nmea`                | NMEA-standard GNSS positioning data (time, coordinates, speed). | Real-time visualization, trajectory analysis. |
+| `pvt.dat_241227_104907.geojson`| GeoJSON file with geolocation data (points, timestamps, metadata). | GIS visualization, geospatial analysis.   |
+| `pvt.dat_241227_104907.gpx`    | GPX file with trajectory data (waypoints, routes, metadata). | Navigation, sharing with GPS devices/apps. Create a new map in https://www.google.com/maps/d/u/0/ and import the `.gpx` file.|
+| `pvt.dat_241227_104907.kml`    | KML file with trajectory data for Google Earth.       | 3D visualization, trajectory presentation. Create a new map in https://www.google.com/maps/d/u/0/ and import the `.kml` file.|
+
+
 ## Reference
 - GNSS-SDR: https://gnss-sdr.org/
 - USRP X310: https://www.ettus.com/products/boards/usrp-x310 
