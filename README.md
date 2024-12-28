@@ -120,13 +120,30 @@ gnss-sdr --config_file=post_processing.conf
 
 ### 4. Matters need attention
 **(1) Error: loss of lock**
-When you build everything greatly, you run the
+When you build everything greatly, you run the whole system, you may meet the general error: loss of lock. The root of the problem is that your SDR's internal oscillator with poor stability. This is ok for most wireless communication applications, but is not enough for GNSS signal processing. The solution is to use a high-quality oscillator. I use an extrenal `GPSDO`, and it works well. (https://github.com/gnss-sdr/gnss-sdr/issues/831#issuecomment-2543501391). For checking if the GPSDO works well, you can check https://github.com/gnss-sdr/gnss-sdr/issues/831#issuecomment-2547548441.
 
+**(2) Electromagnetic interference**
+To avoid the electromagnetic interference, keep the antenna away from the RF_front. According to a similar problem: https://github.com/muccc/iridium-toolkit/issues/120#issuecomment-2441802135.
 
+**(3) Sample rate and gain setting**
+About the parameters seting in the config file: the recommanded sampling rate is 4MHz:
+```
+GNSS-SDR.internal_fs_sps=4000000  
+SignalSource.sampling_frequency=4000000
+```
+The Resampler is unnecessary, when the GNSS-SDR.internal_fs_sps = SignalSource.sampling_frequency!
+GNSS-SDR.internal_fs_sps is the internal target sampling rate, which is sample rate you tell the software and it will
+process your signal with this rate. If it is equals to your SignalSource.sampling_frequency, you don't need to resample.
 
+About the Gain, if the gain is set to 70dB or bigger, which may be too high, resulting in signal supersaturation and signal distortion, which affects signal locking. You need to test to find a suitable gain but not only pursing the highest gain. After testing, I think the 55~58 are all good for my testbed.
 
-
-
+**(4) Overflow error**
+The sample rate is 4MSa/s for each RF source(I have 4 RF source, i.e. 4 ants), the data format is gr_complex(complex 32float for I and Q). As a result the total data generated is 4MSa/s * 4 ants * 4B * 2 = 128MB/s, which exceeds the communication bandwidth between PC with only 1Gbps Ethernet controller and USRP. 
+```
+1Gbps Ethernet controller: 1Gbps = 1000Mbps = 125MB/s < 128MB/s
+10Gbps Ethernet controller: 10Gbps = 10000Mbps = 1250MB/s > 128MB/s
+```
+So, I use the 10Gbps Ethernet controller to solve this problem. Most the general laptop have only 1Gbps Ethernet controller, which is not enough for this application. So I recommand you can buy a USB4 to 10Gbps Ethernet controller. And make sure your laptop has thunderbolt port!
 
 ## Reference
 - GNSS-SDR: https://gnss-sdr.org/
