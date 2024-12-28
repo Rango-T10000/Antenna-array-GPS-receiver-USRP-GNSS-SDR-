@@ -82,8 +82,12 @@ gnss-sdr --version
 ```
 If you see something like: `gnss-sdr version 0.0.19-xxx`, which means everything is great.
 ### 2. Build this testbed
+![connect](/figs/connect.png)
 
 ### 3. Matters need attention
+
+
+
 
 ### 4. Run and process the result
 
