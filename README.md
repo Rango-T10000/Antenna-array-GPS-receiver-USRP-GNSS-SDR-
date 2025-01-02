@@ -155,9 +155,73 @@ Generally, gnss-sdr will output some decoded files, for example in above display
 | `nmea_pvt.nmea`                | NMEA-standard GNSS positioning data (time, coordinates, speed). | Real-time visualization, trajectory analysis. |
 | `pvt.dat_241227_104907.geojson`| GeoJSON file with geolocation data (points, timestamps, metadata). | GIS visualization, geospatial analysis.   |
 | `pvt.dat_241227_104907.gpx`    | GPX file with trajectory data (waypoints, routes, metadata). | Navigation, sharing with GPS devices/apps. <br>Create a new map in https://www.google.com/maps/d/u/0/ and import the `.gpx` file.|
-| `pvt.dat_241227_104907.kml`    | KML file with trajectory data for Google Earth.       | 3D visualization, trajectory presentation. <br>Create a new map in https://www.google.com/maps/d/u/0/ and import the `.kml` file.|
+| `pvt.dat_241227_104907.kml`    | KML file with trajectory data for Google Earth.       | 3D visualization, trajectory presentation. <br>Create a new map in https://www.google.com/maps/d/u/0/ and import the `.kml` file. <br>And also, you can import the `.kml` file in https://www.google.com/earth/about/versions/#earth-for-web for 3D visualization.|
 
+
+
+### 6. Extract information from decoded files
+I provide the code for extracting information from the decoded files, including `.nema` file, `.xxo` file, and `.rnx` file download from the Internet. Using this code, you can extract the following information recorded in the `csv` files like the examples in the folder `./code/data/ant0.csv` :
+```
+Timestamp,Rx_X,Rx_Y,Rx_Z,PRN,Sat_X,Sat_Y,Sat_Z,Carrier_Phase((cycles),RSS((dBHz)
+2024-12-27 02:43:48.390000,-2418189.139113585,5385823.559379437,2405652.2286304315,G26,-17471192.10001667,19679063.951060183,952052.2374084838,128088169.369,42.692
+2024-12-27 02:43:48.390000,-2418189.139113585,5385823.559379437,2405652.2286304315,G28,8116807.666167371,-25155650.334401198,-2654593.203265004,135533226.424,41.392
+2024-12-27 02:43:48.390000,-2418189.139113585,5385823.559379437,2405652.2286304315,G29,22033026.332381085,9673379.434590535,11064110.709128043,146178780.326,41.885
+2024-12-27 02:43:48.390000,-2418189.139113585,5385823.559379437,2405652.2286304315,G32,15340710.572897878,19983728.84202612,8933294.964710569,131743103.517,44.892
+2024-12-27 02:43:48.490000,-2418191.1087058643,5385818.364426423,2405653.4754515854,G26,-17471242.922931515,19679012.983145047,952140.3493899454,128088169.369,42.692
+2024-12-27 02:43:48.490000,-2418191.1087058643,5385818.364426423,2405653.4754515854,G28,8116994.357508367,-25155562.527996276,-2654856.4888132513,135533226.424,41.392
+2024-12-27 02:43:48.490000,-2418191.1087058643,5385818.364426423,2405653.4754515854,G29,22033206.028190624,9673365.088513652,11063765.570014128,146178780.326,41.885
+2024-12-27 02:43:48.490000,-2418191.1087058643,5385818.364426423,2405653.4754515854,G32,15340915.738580769,19983360.801088165,8933773.831885163,131743103.517,44.892
+2024-12-27 02:43:48.590000,-2418197.3144785874,5385825.825604284,2405664.283551862,G26,-17471293.743363842,19678962.01692558,952228.459365025,128088169.369,42.692
+2024-12-27 02:43:48.590000,-2418197.3144785874,5385825.825604284,2405664.283551862,G28,8117181.050688698,-25155474.716655854,-2655119.7733534994,135533226.424,41.392
+2024-12-27 02:43:48.590000,-2418197.3144785874,5385825.825604284,2405664.283551862,G29,22033385.718153264,9673350.7373472,11063420.43332684,146178780.326,41.885
+2024-12-27 02:43:48.590000,-2418197.3144785874,5385825.825604284,2405664.283551862,G32,15341120.890295621,19982992.75409232,8934252.690786626,131743103.517,44.892
+```
+
+Each line in above extracted data includes:
+- Timestamp of the received signal (UTC)
+- Receiver position (Rx_X, Rx_Y, Rx_Z); ECEF coordinates
+- Satellite position (Sat_X, Sat_Y, Sat_Z); ECEF coordinates
+- Satellite PRN (ID)
+- Carrier phase (cycles)
+- Received signal strength, RSS (dBHz)
+  
+**(1) How to use ?**
+I provide examples in `./12_27_4_ants` folder, which are the decoded files by using the gnss-sdr to process the received raw data in 2024/12/27. The folders include 4 folders from 4 different antennas in the array.  Find the `code/main.py`,change the file path and run this script. You will get the generated `.csv` file in the path you just set.
+
+In the `./12_27_4_ants` folder, `12_27_4_ants/BRDM00DLR_S_20243620000_01D_MN.rnx` file is the broadcast ephemeris files download from https://cddis.nasa.gov/archive/gnss/data/daily/2024/brdc/. 
+
+
+**(2) Code explanation**
+- **About decoded ephemeris files:** In fact, the decoded files include the ephemeris file decoded from the received signal, i.e. `gps_ephemeris.xml; GSDR362k49.24N` in my example. However, if check these ephemeris file, you will find that it only shows the ephemeris data in a timestamp. For example, `.nema` file shows your position at `2024-12-27 02:43:48.590000`, but the ephemeris file only shows the ephemeris data at `2024 12 27 04 00 00`. So, I need to use the broadcast ephemeris file to get the ephemeris data at the timestamp of the `.nema` file. The broadcast ephemeris file download from the Internet show the complete ephemeris data for the whole day. 
+- **About broadcast ephemeris files:** For example, to compute the satellite position at  `2024-12-27 02:43:48.590000`, I need to find the broadcast ephemeris file including close time epoch with the target time and download it. In my example, the broadcast ephemeris file is `BRDM00DLR_S_20243620000_01D_MN.rnx`. Because the broadcast ephemeris file records the ephemeris data at intervals of every two hours. For example:
+```
+G26 2024 12 27 01 59 44-2.407375723124e-05-1.455191522837e-11 0.000000000000e+00
+     7.400000000000e+01 4.884375000000e+01 5.061996566761e-09-6.864365990568e-01
+     2.671033143997e-06 9.770426666364e-03 9.756535291672e-06 5.153752902985e+03
+     4.391840000000e+05 1.303851604462e-07 2.364065943281e+00 9.872019290924e-08
+     9.298577293354e-01 1.724062500000e+02 5.992290138708e-01-8.270344493045e-09
+    -3.082271246112e-10 1.000000000000e+00 2.346000000000e+03 0.000000000000e+00
+     2.000000000000e+00 0.000000000000e+00 6.519258022308e-09 7.400000000000e+01
+     4.320180000000e+05 4.000000000000e+00                                      
+G26 2024 12 27 04 00 00-2.417853102088e-05-1.455191522837e-11 0.000000000000e+00
+     7.700000000000e+01 5.025000000000e+01 4.990565019922e-09 3.660794088596e-01
+     2.713873982430e-06 9.771208977327e-03 9.486451745033e-06 5.153754528046e+03
+     4.464000000000e+05 2.235174179077e-08 2.364006504920e+00 1.862645149231e-07
+     9.298555174032e-01 1.799375000000e+02 5.991817425989e-01-8.233200088688e-09
+    -3.553719455251e-10 1.000000000000e+00 2.346000000000e+03 0.000000000000e+00
+     2.000000000000e+00 0.000000000000e+00 6.519258022308e-09 7.700000000000e+01
+     4.392180000000e+05 4.000000000000e+00                                      
+```
+To compute the satellite `G26`'s position at `2024-12-27 02:43:48.590000`, I use linear interpolation to generate the ephemeris data at `2024-12-27 02:43:48.590000` from the ephemeris data at `2024-12-27 01:59:44` and `2024-12-27 04:00:00`. Then, I can use it to compute the satellite position at `2024-12-27 02:43:48.590000`.
+
+- **About the corrdinate:** Both the receiver position and satellite position are provoded in the Earth-centered, Earth-fixed coordinate system (ECEF coordinates). Receiver position is computed by converting the receiver `latitude, longitude, and altitude` to ECEF coordinates. Satellite position is computed by  broadcast ephemeris file to ECEF coordinates.
 
 ## Reference
 - GNSS-SDR: https://gnss-sdr.org/
 - USRP X310: https://www.ettus.com/products/boards/usrp-x310 
+- Calculation of Satellite Position from Ephemeris Data: https://ascelibrary.org/doi/pdf/10.1061/9780784411506.ap03
+- Broadcast ephemeris data: https://cddis.nasa.gov/archive/gnss/data/daily/2024/brdc/
+- TLE data for GPS: https://celestrak.org/GPS/
+- GPS Outage: https://gpsoutage.com/gpsoutages/
+- sgp packet: https://pypi.org/project/sgp4/
+- skyfield packet: https://rhodesmill.org/skyfield/
