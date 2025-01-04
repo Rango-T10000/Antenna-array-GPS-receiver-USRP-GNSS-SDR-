@@ -142,6 +142,8 @@ def process_nmea_group(group):
         # Process all GSV messages to get complete satellite info
         satellites = []
         signal_strength = {}
+        elevation_angles = {}    
+        azimuth_angles = {}     
         
         for line in group:
             if line.startswith('$GPGSV'):
@@ -151,8 +153,15 @@ def process_nmea_group(group):
                     if j+3 < len(gsv_parts):
                         prn = gsv_parts[j]
                         if prn:
-                            satellites.append(f"G{prn}")
-                            signal_strength[f"G{prn}"] = float(gsv_parts[j+3])
+                            sat_id = f"G{prn}"
+                            satellites.append(sat_id)
+                            # Add ele, azi, rss
+                            try:
+                                elevation_angles[sat_id] = float(gsv_parts[j+1])
+                                azimuth_angles[sat_id] = float(gsv_parts[j+2])
+                                signal_strength[sat_id] = float(gsv_parts[j+3])
+                            except (ValueError, IndexError):
+                                continue
         
         # Build timestamp
         timestamp = datetime.strptime(f"{date_str}{time_str}", "%d%m%y%H%M%S.%f")
@@ -163,7 +172,9 @@ def process_nmea_group(group):
             'lon': lon_dec,
             'alt': alt,
             'satellites': satellites,
-            'signal_strength': signal_strength
+            'signal_strength': signal_strength,
+            'elevation_angles': elevation_angles,    
+            'azimuth_angles': azimuth_angles        
         }
         
     except (ValueError, IndexError) as e:

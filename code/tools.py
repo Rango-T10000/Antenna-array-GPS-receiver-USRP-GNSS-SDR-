@@ -142,6 +142,8 @@ def process_nmea_group(group):
         # Process all GSV messages to get complete satellite info
         satellites = []
         signal_strength = {}
+        elevation_angles = {}    
+        azimuth_angles = {}     
         
         for line in group:
             if line.startswith('$GPGSV'):
@@ -151,8 +153,15 @@ def process_nmea_group(group):
                     if j+3 < len(gsv_parts):
                         prn = gsv_parts[j]
                         if prn:
-                            satellites.append(f"G{prn}")
-                            signal_strength[f"G{prn}"] = float(gsv_parts[j+3])
+                            sat_id = f"G{prn}"
+                            satellites.append(sat_id)
+                            # Add ele, azi, rss
+                            try:
+                                elevation_angles[sat_id] = float(gsv_parts[j+1])
+                                azimuth_angles[sat_id] = float(gsv_parts[j+2])
+                                signal_strength[sat_id] = float(gsv_parts[j+3])
+                            except (ValueError, IndexError):
+                                continue
         
         # Build timestamp
         timestamp = datetime.strptime(f"{date_str}{time_str}", "%d%m%y%H%M%S.%f")
@@ -163,7 +172,9 @@ def process_nmea_group(group):
             'lon': lon_dec,
             'alt': alt,
             'satellites': satellites,
-            'signal_strength': signal_strength
+            'signal_strength': signal_strength,
+            'elevation_angles': elevation_angles,    
+            'azimuth_angles': azimuth_angles        
         }
         
     except (ValueError, IndexError) as e:
@@ -213,7 +224,7 @@ def find_satellite_data(broadcast_file, target_time, target_prn):
     Returns:
         tuple: (before_epoch, before_block, after_epoch, after_block)
     """
-    # 存储所有该PRN的星历数据
+    # Stores all ephemeris data for the PRN
     all_epochs = []
     all_blocks = []
     
@@ -250,7 +261,7 @@ def find_satellite_data(broadcast_file, target_time, target_prn):
                                 
                                 epoch = datetime(year, month, day, hour, minute, second)
                                 
-                                # 收集所有该PRN的数据
+                                # Collect data for all the PRN
                                 all_epochs.append(epoch)
                                 all_blocks.append(current_block.copy())
                                         
@@ -260,13 +271,13 @@ def find_satellite_data(broadcast_file, target_time, target_prn):
                         line_count = 0
                         current_block = []
         
-        # 如果找到数据，则处理
+        # if find data
         if all_epochs:
-            # 按时间排序
+            # sort according to time
             sorted_data = sorted(zip(all_epochs, all_blocks))
             all_epochs, all_blocks = zip(*sorted_data)
             
-            # 找到target_time在已排序时间序列中的位置
+            # Find the position of the target time in the sorted time series
             for i in range(len(all_epochs)-1):
                 if all_epochs[i] <= target_time < all_epochs[i+1]:
                     before_epoch = all_epochs[i]
